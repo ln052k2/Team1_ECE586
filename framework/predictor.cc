@@ -60,25 +60,12 @@
 		//bool is_return; 		// true if branch is a return; false otherwise
         }
 
-    // //Convention 1?: LSB is history tables are the most recent bit added to the history
-    // //Convention 2?: Predictor counter state values are in the least significant bits
-
-    // // 1024 x 3 bit local predictor (3 bit saturating counter)
-    // uint8_t local_predictor[1024];
-    // // 1 x 12 bit path history table
-    // uint16_t path_history_table;
-    // // 4096 x 2 bit global predictor (2 bit saturating counter)
-    // uint8_t global_predictor[4096];
-    // // 4096 x 2 bit choice predictor (2 bit saturating counter)
-    // uint8_t choice_predictor[4096];
-
-
     // Update the predictor after a prediction has been made.  This should accept
     // the branch record (br) and architectural state (os), as well as a third
     // argument (taken) indicating whether or not the branch was taken.
     void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os, bool taken)
         {
-			// Update local history
+			// Get current local history
 			uint16_t curr_local_history = local_history_table[((br->instruction_addr & 0xFFF) >> 2)];
 			#ifdef DEBUG
 			printf("%1d\n",taken);
@@ -86,9 +73,22 @@
 			printf("Index: %x\n", ((br->instruction_addr & 0xFFF) >> 2));
 			printf("Curr_local_history: %x\n", curr_local_history);
 			printf("Path_history: %x\n", path_history_table);
+			printf("Local predictor state: %x\n", local_predictor[curr_local_history]);
+			printf("Global predictor state: %x\n", global_predictor[path_history_table & 0xFFF]);
 			#endif
 
-			// update LSB of local history
+			// Update local predictor
+			if ((taken) && (local_predictor[curr_local_history] < 7)) {
+				local_predictor[curr_local_history]++;
+			}
+			else if ((!taken) && (local_predictor[curr_local_history] > 0)) {
+				local_predictor[curr_local_history]--;
+			}
+			#ifdef DEBUG
+			printf("Updated local predictor state: %x\n", local_predictor[curr_local_history]);
+			#endif
+
+			// Update local history
 			curr_local_history <<= 1;
 			if (taken) {
 				curr_local_history |= 1;
@@ -99,6 +99,17 @@
 			curr_local_history &= 0x3FF; // make sure history is only 10 bits wide
 			local_history_table[((br->instruction_addr & 0xFFF) >> 2)] = curr_local_history;
 		
+			// Update global predictor
+			if ((taken) && (global_predictor[path_history_table & 0xFFF] < 3)) {
+				global_predictor[path_history_table]++;
+			}
+			else if ((!taken) && (global_predictor[path_history_table & 0xFFF] > 0)) {
+				global_predictor[path_history_table]--;
+			}
+			#ifdef DEBUG
+			printf("Updated global predictor state: %x\n", global_predictor[path_history_table & 0xFFF]);
+			#endif
+
 			// Update global history
 			path_history_table <<= 1;
 			if (taken) {
@@ -113,6 +124,5 @@
 			printf("Updated local history: %x\n", curr_local_history);
 			printf("Updated global history: %x\n", path_history_table);
 			#endif
-
 
         }
