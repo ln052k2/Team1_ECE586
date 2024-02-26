@@ -3,7 +3,7 @@
 */
 
 #include "predictor.h"
-#define DEBUG
+// #define DEBUG
 
     bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
         {
@@ -63,8 +63,6 @@
     // //Convention 1?: LSB is history tables are the most recent bit added to the history
     // //Convention 2?: Predictor counter state values are in the least significant bits
 
-    // // 1024 x 10 bit local history table
-    // uint16_t local_history_table[1024];
     // // 1024 x 3 bit local predictor (3 bit saturating counter)
     // uint8_t local_predictor[1024];
     // // 1 x 12 bit path history table
@@ -80,17 +78,18 @@
     // argument (taken) indicating whether or not the branch was taken.
     void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os, bool taken)
         {
-			printf("%1d\n",taken);
-
 			// Update local history
 			uint16_t curr_local_history = local_history_table[((br->instruction_addr & 0xFFF) >> 2)];
 			#ifdef DEBUG
+			printf("%1d\n",taken);
 			printf("Instruction address: %x\n", br->instruction_addr);
 			printf("Index: %x\n", ((br->instruction_addr & 0xFFF) >> 2));
 			printf("Curr_local_history: %x\n", curr_local_history);
+			printf("Path_history: %x\n", path_history_table);
 			#endif
 
-			curr_local_history = curr_local_history << 1; // shift left
+			// update LSB of local history
+			curr_local_history <<= 1;
 			if (taken) {
 				curr_local_history |= 1;
 			}
@@ -98,22 +97,22 @@
 				curr_local_history &= ~1; // not necessary?
 			}
 			curr_local_history &= 0x3FF; // make sure history is only 10 bits wide
+			local_history_table[((br->instruction_addr & 0xFFF) >> 2)] = curr_local_history;
+		
+			// Update global history
+			path_history_table <<= 1;
+			if (taken) {
+				path_history_table |= 1;	
+			}
+			else if (!taken) {
+				path_history_table &= ~1;
+			}
+			path_history_table &= 0xFFF;
 			
 			#ifdef DEBUG
 			printf("Updated local history: %x\n", curr_local_history);
+			printf("Updated global history: %x\n", path_history_table);
 			#endif
-			local_history_table[((br->instruction_addr & 0xFFF) >> 2)] = curr_local_history;
-		
 
-			// // Update history tables
-			// if (taken) {
-			// 	path_history_table |= 1;	
-			// }
-			// else if (!taken) {
-			// 	path_history_table &= ~1;
-			// }
-			
-			// pass branch prediction results to predictors
-				// increment/decrementing
 
         }
