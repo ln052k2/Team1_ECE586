@@ -79,8 +79,8 @@
 			#endif
 
 			// Update choice predictor
-			bool global_prediction = (local_predictor[curr_local_history] & 0x4) >> 2;
-			bool local_prediction = (global_predictor[path_history_table & 0xFFF] & 0x2) >> 1;
+			bool local_prediction = (local_predictor[curr_local_history] & 0x4) >> 2;
+			bool global_prediction = (global_predictor[path_history_table & 0xFFF] & 0x2) >> 1;
 			if (global_prediction != local_prediction) // only update choice predictor if local and global differ
 			{
 				if ((global_prediction == taken) & (choice_predictor[(path_history_table & 0xFFF)] < 3)) {
@@ -124,12 +124,13 @@
 				path_history_table |= 1;
 				curr_local_history |= 1;
 			}
-			else {
+			else { // might not be necessary since left shift fills 0
 				path_history_table &= ~1;
-				curr_local_history &= ~1; // not necessary?
+				curr_local_history &= ~1;
 			}
-			path_history_table &= 0xFFF;
-			curr_local_history &= 0x3FF; // make sure history is only 10 bits wide
+
+			path_history_table &= 0xFFF; // make sure global history is only 12 bits wide
+			curr_local_history &= 0x3FF; // make sure local history is only 10 bits wide
 			local_history_table[((br->instruction_addr & 0xFFF) >> 2)] = curr_local_history;			
 			#ifdef DEBUG
 			printf("Updated local history: %x\n", curr_local_history);
