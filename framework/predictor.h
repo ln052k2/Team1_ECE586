@@ -16,10 +16,20 @@
 class PREDICTOR
 {
 public:
-    bool get_prediction(const branch_record_c* br, const op_state_c* os);
+    	bool get_prediction(const branch_record_c* br, const op_state_c* os);
 
-    void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken);
+    	void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken);
 
+	// 1024 x 10 bit local history
+	uint16_t local_history_table[1024];
+	// 1024 x 3 bit local predictor (3 bit saturating counter)
+	uint8_t local_predictor[1024];
+	// 1 x 12 bit path history table
+	uint16_t path_history_table;
+	// 4096 x 2 bit global predictor (2 bit saturating counter)
+	uint8_t global_predictor[4096];
+	// 4096 x 2 bit choice predictor (2 bit saturating counter)
+	uint8_t choice_predictor[4096];
 };
 
 #endif // PREDICTOR_H_SEEN
