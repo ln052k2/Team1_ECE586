@@ -20,16 +20,22 @@ public:
 
     	void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken);
 
-	// 1024 x 10 bit local history
-	uint16_t local_history_table[1024];
-	// 1024 x 3 bit local predictor (3 bit saturating counter)
-	uint8_t local_predictor[1024];
-	// 1 x 12 bit path history table
-	uint16_t path_history_table;
-	// 4096 x 2 bit global predictor (2 bit saturating counter)
-	uint8_t global_predictor[4096];
-	// 4096 x 2 bit choice predictor (2 bit saturating counter)
-	uint8_t choice_predictor[4096];
+				/* ----- Paper equations ---- */
+	// optimal global path history length (h bits) to threshold value (theta) equation
+	// theta = floor(1.93 * h + 14)
+	//
+	// Note: The paper suggests that the global path histry be 28 bits wide and that the
+	// threshold value should be 68 for a 4KB budget predictor. To meet requirements,
+	// the global path history width is 32 bits (to be a power of 2) and thus the
+	// threshold value is 75.
+
+	// 32 bit global path history
+	uint32_t globalPathH;
+	// threshold value
+	uint8_t threshold = 75;
+	// 8 bit x 256 perceptron entry x 8 weight perceptron table (2KB total)
+	// 8 PC bits --> 256 entries, one 8-bit weight for each bit taken from PC (8 x 8 bit)
+	int8_t perceptron[256][8];
 };
 
 #endif // PREDICTOR_H_SEEN
