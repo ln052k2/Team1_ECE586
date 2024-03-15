@@ -8,51 +8,29 @@
 
     bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
         {
+		// Variable Declarations
+		uint16_t branchAddr = (br->instruction_addr >> 2) & 0x3FF;
+		uint16_t hash = (bhr ^ branchAddr) & 0x3FF;
+		bool phtResult;
+		bool biasResult;
 
-		// true = predicting taken, false = predicting not taken
-		bool local_prediction;		// local prediction result
-		bool global_prediction;		// global prediction result
-		bool choice_prediction; 	// tournament choice (false = local, true = global)
+		// Gather PHT prediction on if bias bit is correct
+		if ((pht[hash] & 0x3) > 1) {
+			phtResult = true;
+		}
+		else {
+			phtResult = false;
+		}
 
-		// Get local history for the current branch and make sure the history is only 10 bits wide
-		uint16_t curr_local_history = local_history_table[((br->instruction_addr & 0xFFF) >> 2)];
-		curr_local_history &= 0x3FF;
+		// Gather what the bias bit's branch prediction
+		biasResult = biases[branchAddr];
 
-		// If the branch is unconditional, predict taken (duh)
-		if (br->is_conditional == false) {
+		//
+		if (biasResult != phtResult) {
+			return false;
+		}
+		else {
 			return true;
-		}
-
-		// Get local prediction
-		if ((local_predictor[curr_local_history] & 0x4) > 0) {
-			local_prediction = true;
-		}
-		else {
-			local_prediction = false;
-		}
-
-		// Get global prediction
-		if ((global_predictor[(path_history_table & 0xFFF)] & 0x2) > 0) {
-			global_prediction = true;
-		}
-		else {
-			global_prediction = false;
-		}
-
-		// Get choice prediction
-		if ((choice_predictor[(path_history_table & 0xFFF)] & 0x2) > 0){
-			choice_prediction = true;
-		}
-		else {
-			choice_prediction = false;
-		}
-
-		// Get branch prediction
-		if (choice_prediction) {
-			return global_prediction;
-		}
-		else {
-			return local_prediction;
 		}
 
 		//void init();		 	// init the branch record
