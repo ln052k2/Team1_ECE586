@@ -25,9 +25,11 @@ public:
 	// 1024 x 2 bit pattern history table
 	uint8_t pht[1024];
 	// 1024 x 16 bit tag array
-	uint16_t tags[1024];
+	uint16_t tags[1024]; // 16 bits after the PC
 	// 1024 x 1 bit bias array
 	bool biases[1024];
+	
+	// bool accessed[1024];
 };
 
 #endif // PREDICTOR_H_SEEN

@@ -1,8 +1,9 @@
 /* Author: Mark Faust;
  * Description: This file defines the two required functions for the branch predictor.
 */
-
+// #define DEBUG
 #include "predictor.h"
+
 
     bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
         {
@@ -57,9 +58,22 @@
     // argument (taken) indicating whether or not the branch was taken.
     void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os, bool taken)
         {
+
 			// Variable Declarations
 			uint16_t branchAddr = (br->instruction_addr >> 2) & 0x3FF;
 			uint16_t hash = (bhr ^ branchAddr) & 0x3FF;
+			uint16_t tag = (br->instruction_addr >> 12) & 0xFFFF;
+
+			// Update BTB table
+			if (tags[branchAddr] != tag) {
+				tags[branchAddr] = tag;
+				biases[branchAddr] = taken;
+			}
+
+			// if (!accessed[branchAddr]) {
+			// 	accessed[branchAddr] = 1;
+			// 	biases[branchAddr] = taken;
+			// }
 
 			// Update branch history register
 			bhr <<= 1;
@@ -70,10 +84,10 @@
 			}
 
 			// Update pattern history table
-			if (taken == biases[branchAddr]) {
+			if ((taken == biases[branchAddr]) && (pht[hash] < 3)){
 				pht[hash]++;
 			}
-			else if (taken != biases[branchAddr]) {
+			else if ((taken != biases[branchAddr]) && (pht[hash] > 0)) {
 				pht[hash]--;
 			}
         }
