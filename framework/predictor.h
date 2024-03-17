@@ -21,7 +21,7 @@ public:
     	void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken);
 
 	// 10 bit branch history register
-	unint16_t bhr;
+	uint16_t bhr;
 	// 1024 x 2 bit pattern history table
 	uint8_t pht[1024];
 	// 1024 x 16 bit tag array
