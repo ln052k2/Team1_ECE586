@@ -14,14 +14,6 @@
 		bool phtResult;
 		bool biasResult;
 
-		// Gather PHT prediction on if bias bit is correct
-		if ((pht[hash] & 0x3) > 1) {
-			phtResult = true;
-		}
-		else {
-			phtResult = false;
-		}
-
 		// Search for matching tag and get bias bit
 		// If no match, simply have the bias be 1 if the braches target address is 
 		// less than or equal to the current PC, 0 otherwise.
@@ -29,12 +21,22 @@
 			biasResult = biases[branchAddr];
 		}
 		else {
+			// since we are going to get new bias info, may as well update pht to be neutral
+			pht[hash] = 0x2;
 			if (br->branch_target <= br->instruction_addr) {
 				biasResult = true;
 			}
 			else {
 				biasResult = false;
 			}
+		}
+		
+		// Gather PHT prediction on if bias bit is correct
+		if ((pht[hash] & 0x3) > 1) {
+			phtResult = true;
+		}
+		else {
+			phtResult = false;
 		}
 
 		// Get the prediction (XNOR bias and PHT prediction)
