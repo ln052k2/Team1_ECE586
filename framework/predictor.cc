@@ -10,6 +10,7 @@
 		// Variable Declarations
 		uint16_t branchAddr = (br->instruction_addr >> 2) & 0x3FF;
 		uint16_t hash = (bhr ^ branchAddr) & 0x3FF;
+		uint16_t tag = (br->instruction_addr >> 12) & 0xFFFF;
 		bool phtResult;
 		bool biasResult;
 
@@ -21,10 +22,22 @@
 			phtResult = false;
 		}
 
-		// Gather what the bias bit's branch prediction
-		biasResult = biases[branchAddr];
+		// Search for matching tag and get bias bit
+		// If no match, simply have the bias be 1 if the braches target address is 
+		// less than or equal to the current PC, 0 otherwise.
+		if (tags[branchAddr] == tag) {
+			biasResult = biases[branchAddr];
+		}
+		else {
+			if (br->branch_target <= br->instruction_addr) {
+				biasResult = true;
+			}
+			else {
+				biasResult = false;
+			}
+		}
 
-		//
+		// Get the prediction (XNOR bias and PHT prediction)
 		if (biasResult != phtResult) {
 			return false;
 		}
