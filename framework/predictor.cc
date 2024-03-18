@@ -14,6 +14,12 @@
 		bool phtResult;
 		bool biasResult;
 
+		// If branch is unconditional, predict taken
+		if (br->is_conditional == false) {
+			return true;
+		}
+			 
+
 		// Search for matching tag and get bias bit
 		// If no match, simply have the bias be 1 if the braches target address is 
 		// less than or equal to the current PC, 0 otherwise.
